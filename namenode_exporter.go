@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"io/ioutil"
 	"net/http"
 
@@ -11,13 +12,13 @@ import (
 )
 
 const (
-	namespace = "namenode"
+	namespace = "namenode" //指标前缀 如：namenode_BlocksTotal
 )
 
 var (
 	listenAddress  = flag.String("web.listen-address", ":9070", "Address on which to expose metrics and web interface.")
 	metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	namenodeJmxUrl = flag.String("namenode.jmx.url", "http://localhost:50070/jmx", "Hadoop JMX URL.")
+	namenodeJmxUrl = flag.String("namenode.jmx.url", "http://10.231.144.251:50070/jmx", "Hadoop JMX URL.")
 )
 
 type Exporter struct {
@@ -309,7 +310,7 @@ func main() {
 	prometheus.MustRegister(exporter)
 
 	log.Printf("Starting Server: %s", *listenAddress)
-	http.Handle(*metricsPath, prometheus.Handler())
+	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 		<head><title>NameNode Exporter</title></head>
