@@ -10,13 +10,11 @@ set CGO_ENABLED=0
 set GOARCH=amd64  //设置目标可执行程序操作系统构架，包括 386，amd64，arm
 set GOOS=linux    //设置可执行程序运行操作系统，支持 darwin，freebsd，linux，
 
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 sudo go build namenode_exporter.go
-
-env GOOS=linux GOARCH=amd64 sudo go build -o nm_exporter namenode_exporter.go
 
 #成功
 #go install github.com/mitchellh/gox@v1.0.1
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build namenode_exporter.go
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o nm_exporter namenode_exporter.go
 
 sudo go build namenode_exporter.go
 sudo go build resourcemanager_exporter.go
