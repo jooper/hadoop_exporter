@@ -3,12 +3,13 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/log"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/log"
+	"time"
 )
 
 const (
@@ -184,93 +185,69 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		log.Error(err)
 	}
-	// {"beans":[{"name":"Hadoop:service=NameNode,name=FSNamesystem", ...}, {"name":"java.lang:type=MemoryPool,name=Code Cache", ...}, ...]}
+
 	m := f.(map[string]interface{})
-	// [{"name":"Hadoop:service=NameNode,name=FSNamesystem", ...}, {"name":"java.lang:type=MemoryPool,name=Code Cache", ...}, ...]
+
+	//faasList := list.List{}
+
 	var nameList = m["beans"].([]interface{})
 	for _, nameData := range nameList {
 		nameDataMap := nameData.(map[string]interface{})
-		/*
-			{
-				"name" : "Hadoop:service=NameNode,name=FSNamesystem",
-				"modelerType" : "FSNamesystem",
-				"tag.Context" : "dfs",
-				"tag.HAState" : "active",
-				"tag.TotalSyncTimes" : "23 6 ",
-				"tag.Hostname" : "CNHORTO7502.line.ism",
-				"MissingBlocks" : 0,
-				"MissingReplOneBlocks" : 0,
-				"ExpiredHeartbeats" : 0,
-				"TransactionsSinceLastCheckpoint" : 2007,
-				"TransactionsSinceLastLogRoll" : 7,
-				"LastWrittenTransactionId" : 172706,
-				"LastCheckpointTime" : 1456089173101,
-				"CapacityTotal" : 307099828224,
-				"CapacityTotalGB" : 286.0,
-				"CapacityUsed" : 1471291392,
-				"CapacityUsedGB" : 1.0,
-				"CapacityRemaining" : 279994568704,
-				"CapacityRemainingGB" : 261.0,
-				"CapacityUsedNonDFS" : 25633968128,
-				"TotalLoad" : 6,
-				"SnapshottableDirectories" : 0,
-				"Snapshots" : 0,
-				"LockQueueLength" : 0,
-				"BlocksTotal" : 67,
-				"NumFilesUnderConstruction" : 0,
-				"NumActiveClients" : 0,
-				"FilesTotal" : 184,
-				"PendingReplicationBlocks" : 0,
-				"UnderReplicatedBlocks" : 0,
-				"CorruptBlocks" : 0,
-				"ScheduledReplicationBlocks" : 0,
-				"PendingDeletionBlocks" : 0,
-				"ExcessBlocks" : 0,
-				"PostponedMisreplicatedBlocks" : 0,
-				"PendingDataNodeMessageCount" : 0,
-				"MillisSinceLastLoadedEdits" : 0,
-				"BlockCapacity" : 2097152,
-				"StaleDataNodes" : 0,
-				"TotalFiles" : 184,
-				"TotalSyncCount" : 7
-			}
-		*/
+
+		faasMap := make(map[string]interface{})
+
 		if nameDataMap["name"] == "Hadoop:service=NameNode,name=FSNamesystem" {
 			e.MissingBlocks.Set(nameDataMap["MissingBlocks"].(float64))
 			e.CapacityTotal.Set(nameDataMap["CapacityTotal"].(float64))
 			e.CapacityUsed.Set(nameDataMap["CapacityUsed"].(float64))
 			e.CapacityRemaining.Set(nameDataMap["CapacityRemaining"].(float64))
+
 			e.CapacityUsedNonDFS.Set(nameDataMap["CapacityUsedNonDFS"].(float64))
 			e.BlocksTotal.Set(nameDataMap["BlocksTotal"].(float64))
 			e.FilesTotal.Set(nameDataMap["FilesTotal"].(float64))
 			e.CorruptBlocks.Set(nameDataMap["CorruptBlocks"].(float64))
 			e.ExcessBlocks.Set(nameDataMap["ExcessBlocks"].(float64))
 			e.StaleDataNodes.Set(nameDataMap["StaleDataNodes"].(float64))
+
+			faasMap["MissingBlocks"] = nameDataMap["MissingBlocks"].(float64)
+			faasMap["NumLiveDataNodes"] = nameDataMap["NumLiveDataNodes"].(float64)
+			faasMap["CapacityTotal"] = nameDataMap["CapacityTotal"].(float64)
+			faasMap["CapacityUsed"] = nameDataMap["CapacityUsed"].(float64)
+			faasMap["CapacityRemaining"] = nameDataMap["CapacityRemaining"].(float64)
+			faasMap["CapacityUsedNonDFS"] = nameDataMap["CapacityUsedNonDFS"].(float64)
+			faasMap["BlocksTotal"] = nameDataMap["BlocksTotal"].(float64)
+			faasMap["FilesTotal"] = nameDataMap["FilesTotal"].(float64)
+			faasMap["CorruptBlocks"] = nameDataMap["CorruptBlocks"].(float64)
+			faasMap["ExcessBlocks"] = nameDataMap["ExcessBlocks"].(float64)
+			faasMap["StaleDataNodes"] = nameDataMap["StaleDataNodes"].(float64)
 		}
 		if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ParNew" {
 			e.pnGcCount.Set(nameDataMap["CollectionCount"].(float64))
 			e.pnGcTime.Set(nameDataMap["CollectionTime"].(float64))
+
+			faasMap["pnGcCount"] = nameDataMap["CollectionCount"].(float64)
+			faasMap["pnGcTime"] = nameDataMap["CollectionTime"].(float64)
 		}
 		if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep" {
 			e.cmsGcCount.Set(nameDataMap["CollectionCount"].(float64))
 			e.cmsGcTime.Set(nameDataMap["CollectionTime"].(float64))
+
+			faasMap["cmsGcCount"] = nameDataMap["CollectionCount"].(float64)
+			faasMap["cmsGcTime"] = nameDataMap["CollectionTime"].(float64)
+
 		}
-		/*
-			"name" : "java.lang:type=Memory",
-			"modelerType" : "sun.management.MemoryImpl",
-			"HeapMemoryUsage" : {
-				"committed" : 1060372480,
-				"init" : 1073741824,
-				"max" : 1060372480,
-				"used" : 124571464
-			},
-		*/
+
 		if nameDataMap["name"] == "java.lang:type=Memory" {
 			heapMemoryUsage := nameDataMap["HeapMemoryUsage"].(map[string]interface{})
 			e.heapMemoryUsageCommitted.Set(heapMemoryUsage["committed"].(float64))
 			e.heapMemoryUsageInit.Set(heapMemoryUsage["init"].(float64))
 			e.heapMemoryUsageMax.Set(heapMemoryUsage["max"].(float64))
 			e.heapMemoryUsageUsed.Set(heapMemoryUsage["used"].(float64))
+
+			faasMap["heapMemoryUsageCommitted"] = heapMemoryUsage["committed"].(float64)
+			faasMap["heapMemoryUsageInit"] = heapMemoryUsage["init"].(float64)
+			faasMap["heapMemoryUsageMax"] = heapMemoryUsage["max"].(float64)
+			faasMap["heapMemoryUsageUsed"] = heapMemoryUsage["used"].(float64)
 		}
 
 		if nameDataMap["name"] == "Hadoop:service=NameNode,name=FSNamesystem" {
@@ -281,7 +258,25 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 
+		//str, _ := json.Marshal(faasMap)
+
+		if len(faasMap) > 0 {
+			//faasMap["timestamp"]=time.Now()//.Format("2006-01-02 15:04:05")
+
+			//faasMap["createtime"]=time.Now()
+
+			pushMetricsToFaas(faasMap)
+			//log.Info(string(str))
+			//faasList.PushBack(faasMap)
+		}
+
 	}
+
+	//if faasList.Len()>0 {
+	//	log.Info(faasList)
+	//	pushMetricsToFaas(faasList)
+	//}
+
 	e.MissingBlocks.Collect(ch)
 	e.CapacityTotal.Collect(ch)
 	e.CapacityUsed.Collect(ch)
@@ -301,15 +296,43 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.heapMemoryUsageMax.Collect(ch)
 	e.heapMemoryUsageUsed.Collect(ch)
 	e.isActive.Collect(ch)
+
+	//log.Info(nameList)
+	//pushMetricsToFaas(MapToJson(string(data)))
+
+}
+
+func t() {
+	//get("http://localhost:9070/metrics")
+	log.Info("xxxx")
+}
+func timeRun() {
+	// 阻塞一下，等待主进程结束
+	tt := time.NewTimer(time.Second * 10)
+	<-tt.C
+	fmt.Println("over.")
+
+	<-time.After(time.Second * 4)
+	fmt.Println("再等待4秒退出。tt 没有终止，打印出 over 后会看见在继续执行...")
+	//tt.Stop()
+	<-time.After(time.Second * 2)
+	fmt.Println("tt.Stop()后， tt 仍继续执行，只是关闭了 tt.C 通道。")
+
+	<-time.After(time.Second * 2)
+	fmt.Println("又等了2秒钟...这两秒钟可以看到 tt 没干活了...")
 }
 
 func main() {
+
+	//timeRun()
 	flag.Parse()
 
 	exporter := NewExporter(*namenodeJmxUrl)
+	// 注册监控指标
 	prometheus.MustRegister(exporter)
 
 	log.Printf("Starting Server: %s", *listenAddress)
+	//初始一个http handler
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
@@ -319,9 +342,12 @@ func main() {
 		<p><a href="` + *metricsPath + `">Metrics</a></p>
 		</body>
 		</html>`))
+
 	})
+
 	err := http.ListenAndServe(*listenAddress, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 }
