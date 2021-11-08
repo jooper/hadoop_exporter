@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	namespace = "namenode" //指标前缀 如：namenode_BlocksTotal
+	namespace = "namenode" //指标前缀 如：namenode_BlocksTot
 )
 
 var (
-	listenAddress  = flag.String("web.listen-address", ":9070", "Address on which to expose metrics and web interface.")
+	listenAddress  = flag.String("web.listen-address", ":"+Utiles.Yml().ExporterPort, "Address on which to expose metrics and web interface.")
 	metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 	namenodeJmxUrl = flag.String("namenode.jmx.url", "http://10.231.144.251:50070/jmx", "Hadoop JMX URL.")
 )
