@@ -12,6 +12,7 @@ type Myconf struct {
 	Ip                 string
 	Port               string
 	FaasApiUrl         string
+	CronStr            string
 	StartSendTime      string
 	SendMaxCountPerDay int
 	Devices            []Device

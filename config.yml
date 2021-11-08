@@ -1,6 +1,7 @@
 ip: localhost
 port: 9070
-faasapiurl: "http://10.231.143.223:18991/hit/xrobot"
+faasapiurl: http://10.231.143.223:18991/hit/xrobot
+cronstr: 0/20 * * * * ?
 startsendtime: 2017-01-02 08:08:08
 sendmaxcountperday: 100
 devices:

@@ -306,7 +306,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 func main() {
 	//开启调度,需在http服务前
-	Utiles.StartScheduler("0/5 * * * * ?")
+	Utiles.StartScheduler(Utiles.Yml().CronStr)
 
 	flag.Parse()
 
