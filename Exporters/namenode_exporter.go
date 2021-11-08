@@ -3,13 +3,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/log"
+	"github.com/wyukawa/hadoop_exporter/Utiles"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 const (
@@ -258,16 +257,19 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 
-		//str, _ := json.Marshal(faasMap)
-
 		if len(faasMap) > 0 {
 			//faasMap["timestamp"]=time.Now()//.Format("2006-01-02 15:04:05")
 
 			//faasMap["createtime"]=time.Now()
 
-			pushMetricsToFaas(faasMap)
-			//log.Info(string(str))
+			//pushMetricsToFaas(faasMap)
+
+			Utiles.PushMetricsToFaas(faasMap)
+			str, _ := json.Marshal(faasMap)
+			log.Info(string(str))
+
 			//faasList.PushBack(faasMap)
+
 		}
 
 	}
@@ -302,29 +304,10 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 }
 
-func t() {
-	//get("http://localhost:9070/metrics")
-	log.Info("xxxx")
-}
-func timeRun() {
-	// 阻塞一下，等待主进程结束
-	tt := time.NewTimer(time.Second * 10)
-	<-tt.C
-	fmt.Println("over.")
-
-	<-time.After(time.Second * 4)
-	fmt.Println("再等待4秒退出。tt 没有终止，打印出 over 后会看见在继续执行...")
-	//tt.Stop()
-	<-time.After(time.Second * 2)
-	fmt.Println("tt.Stop()后， tt 仍继续执行，只是关闭了 tt.C 通道。")
-
-	<-time.After(time.Second * 2)
-	fmt.Println("又等了2秒钟...这两秒钟可以看到 tt 没干活了...")
-}
-
 func main() {
+	//开启调度
+	Utiles.StartScheduler("0/5 * * * * ?")
 
-	//timeRun()
 	flag.Parse()
 
 	exporter := NewExporter(*namenodeJmxUrl)
