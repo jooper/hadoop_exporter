@@ -16,6 +16,12 @@ set GOOS=linux    //设置可执行程序运行操作系统，支持 darwin，
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build namenode_exporter.go
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o nm_exporter namenode_exporter.go
 
+#运行
+上次config.yml和nm_exporter到服务器
+sudo -s
+chmod +x nm_exporter
+nohup ./nm_exporter &
+
 sudo go build namenode_exporter.go
 sudo go build resourcemanager_exporter.go
 ```

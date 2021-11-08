@@ -8,7 +8,9 @@ import (
 	"net/http"
 )
 
-const apiUrl = "http://10.231.143.223:18991/hit/xrobot"
+//const apiUrl = "http://10.231.143.223:18991/hit/xrobot"
+var apiUrl = Yml().FaasApiUrl
+
 const contentType = "application/json"
 
 //定义请求体格式
