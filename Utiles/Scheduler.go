@@ -13,8 +13,20 @@ func StartScheduler(cronStr string) {
 	}
 	//每5秒执行一次
 	c.AddFunc(cronStr, func() {
-		msg := GetJMxMsg(yml.Ip, yml.Port)
+		msg := GetJMxMsg(yml.NameNodeExporterIp, yml.NameNodeExporterPort)
 		log.Info(msg)
+	})
+	c.Start()
+}
+
+func StartSchedulerN(ip string, port string, cronStr string) {
+	c := cron.New()
+	if cronStr == "" {
+		cronStr = "0/5 * * * * ?"
+	}
+	//每5秒执行一次
+	c.AddFunc(cronStr, func() {
+		GetJMxMsg(ip, port)
 	})
 	c.Start()
 }

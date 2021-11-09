@@ -1,8 +1,11 @@
-ip: localhost
-port: 9070
+namenodeexporterip: localhost
+namenodeexporterport: 9070
 faasapiurl: http://10.231.143.223:18991/hit/xrobot
 cronstr: 0/20 * * * * ?
-exporterport: 9070
+namenodejmx: http://10.231.144.251:50070/jmx
+resourcemanagerjmx: http://10.231.144.251:8088
+resourcemanagerexporterIp: localhost
+resourcemanagerexporterport: 9088
 startsendtime: 2017-01-02 08:08:08
 sendmaxcountperday: 100
 devices:

@@ -9,16 +9,19 @@ import (
 //配置文件中字母要小写，结构体属性首字母要大写
 
 type Myconf struct {
-	Ip                 string
-	Port               string
-	FaasApiUrl         string
-	CronStr            string
-	ExporterPort       string
-	StartSendTime      string
-	SendMaxCountPerDay int
-	Devices            []Device
-	WarnFrequency      int
-	SendFrequency      int
+	NameNodeExporterIp          string
+	FaasApiUrl                  string
+	CronStr                     string
+	NameNodeExporterPort        string
+	NameNodeJmx                 string
+	ResourceManagerJmx          string
+	ResourceManagerExporterIp   string
+	ResourceManagerExporterPort string
+	StartSendTime               string
+	SendMaxCountPerDay          int
+	Devices                     []Device
+	WarnFrequency               int
+	SendFrequency               int
 }
 type Device struct {
 	DevId string
@@ -47,7 +50,7 @@ func ReadYml() {
 	//把yaml形式的字符串解析成struct类型
 	yaml.Unmarshal(data, &t)
 
-	fmt.Println(t.Ip)
+	fmt.Println(t.NameNodeExporterIp)
 
 	//fmt.Println("初始数据", t)
 	//if t.Ipport=="" {
