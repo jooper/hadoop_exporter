@@ -328,7 +328,7 @@ func main() {
 
 	log.Printf("Starting Server: %s", *listenAddress)
 
-	//初始一个http handler，对外爆率指标页
+	//初始一个http handler，对外爆率指标页（为prometheus、grafana预留接入可能）
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
