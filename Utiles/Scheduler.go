@@ -19,7 +19,7 @@ func StartScheduler(cronStr string) {
 	c.Start()
 }
 
-func StartSchedulerN(ip string, port string, cronStr string) {
+func StartSchedulerWithCron(ip string, port string, cronStr string) {
 	c := cron.New()
 	if cronStr == "" {
 		cronStr = "0/5 * * * * ?"

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/wyukawa/hadoop_exporter/Utiles"
 	"io/ioutil"
 	"net/http"
 
@@ -16,9 +17,9 @@ const (
 )
 
 var (
-	listenAddress     = flag.String("web.listen-address", ":9071", "Address on which to expose metrics and web interface.")
+	listenAddress     = flag.String("web.listen-address", ":"+Utiles.Yml().JournalNodeExporterPort, "Address on which to expose metrics and web interface.")
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	journalnodeJmxUrl = flag.String("journalnode.jmx.url", "http://localhost:8480/jmx", "Hadoop JMX URL.")
+	journalnodeJmxUrl = flag.String("journalnode.jmx.url", Utiles.Yml().JournalNodeExporterJmx, "Hadoop JMX URL.")
 )
 
 type Exporter struct {
@@ -120,16 +121,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			e.cmsGcCount.Set(journalDataMap["CollectionCount"].(float64))
 			e.cmsGcTime.Set(journalDataMap["CollectionTime"].(float64))
 		}
-		/*
-			"name" : "java.lang:type=Memory",
-			"modelerType" : "sun.management.MemoryImpl",
-			"HeapMemoryUsage" : {
-				"committed" : 1060372480,
-				"init" : 1073741824,
-				"max" : 1060372480,
-				"used" : 124571464
-			},
-		*/
+
 		if journalDataMap["name"] == "java.lang:type=Memory" {
 			heapMemoryUsage := journalDataMap["HeapMemoryUsage"].(map[string]interface{})
 			e.heapMemoryUsageCommitted.Set(heapMemoryUsage["committed"].(float64))
@@ -137,6 +129,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			e.heapMemoryUsageMax.Set(heapMemoryUsage["max"].(float64))
 			e.heapMemoryUsageUsed.Set(heapMemoryUsage["used"].(float64))
 		}
+
+		ConvertMetrics(journalDataMap)
 	}
 	e.pnGcCount.Collect(ch)
 	e.pnGcTime.Collect(ch)
@@ -146,9 +140,47 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.heapMemoryUsageInit.Collect(ch)
 	e.heapMemoryUsageMax.Collect(ch)
 	e.heapMemoryUsageUsed.Collect(ch)
+
+}
+
+/*
+fun:获取指标数据，并推送到faas平台
+auth:jwp
+date：2021/11/10
+*/
+func ConvertMetrics(journalDataMap map[string]interface{}) {
+	faasMap := make(map[string]interface{})
+
+	if journalDataMap["name"] == "java.lang:type=GarbageCollector,name=ParNew" {
+		faasMap["CollectionCount"] = journalDataMap["CollectionCount"].(float64)
+		faasMap["CollectionTime"] = journalDataMap["CollectionTime"].(float64)
+	}
+	if journalDataMap["name"] == "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep" {
+		faasMap["CollectionCount"] = journalDataMap["CollectionCount"].(float64)
+		faasMap["CollectionTime"] = journalDataMap["CollectionTime"].(float64)
+	}
+
+	if journalDataMap["name"] == "java.lang:type=Memory" {
+		heapMemoryUsage := journalDataMap["HeapMemoryUsage"].(map[string]interface{})
+		faasMap["committed"] = heapMemoryUsage["committed"].(float64)
+		faasMap["init"] = heapMemoryUsage["init"].(float64)
+		faasMap["max"] = heapMemoryUsage["max"].(float64)
+		faasMap["used"] = heapMemoryUsage["used"].(float64)
+	}
+
+	if len(faasMap) > 0 {
+		Utiles.PushJournalNodeMetricsToFaas(faasMap)
+		str, _ := json.Marshal(faasMap)
+		log.Info(string(str))
+	}
 }
 
 func main() {
+
+	yml := Utiles.Yml()
+	//开启调度,需在http服务前，调度crontab表达式在配置文件中
+	Utiles.StartSchedulerWithCron(yml.JournalNodeExporterIp, yml.JournalNodeExporterPort, yml.CronStr)
+
 	flag.Parse()
 
 	exporter := NewExporter(*journalnodeJmxUrl)

@@ -17,6 +17,9 @@ type Myconf struct {
 	ResourceManagerJmx          string
 	ResourceManagerExporterIp   string
 	ResourceManagerExporterPort string
+	JournalNodeExporterJmx      string
+	JournalNodeExporterIp       string
+	JournalNodeExporterPort     string
 	StartSendTime               string
 	SendMaxCountPerDay          int
 	Devices                     []Device

@@ -6,24 +6,24 @@ How to build
 go get github.com/prometheus/client_golang/prometheus
 go get github.com/prometheus/log
 
-set CGO_ENABLED=0
-set GOARCH=amd64  //设置目标可执行程序操作系统构架，包括 386，amd64，arm
-set GOOS=linux    //设置可执行程序运行操作系统，支持 darwin，freebsd，linux，
+set GOARCH=amd64  设置目标可执行程序操作系统构架，包括 386，amd64，arm
+set GOOS=linux    设置可执行程序运行操作系统，支持 darwin，freebsd，linux，
+go install github.com/mitchellh/gox@v1.0.1 交叉编译（不通平台，windows，linux，macos等）
 
-
-#成功
-#go install github.com/mitchellh/gox@v1.0.1
+build到当前目录
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build namenode_exporter.go
+build到指定目录
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./target/nm_exporter namenode_exporter.go
+```
 
-#运行
-上次config.yml和nm_exporter到服务器
+How to run
+```
+上传config.yml和nm_exporter到服务器
 sudo -s
 chmod +x nm_exporter
 nohup ./nm_exporter &
-
-sudo go build namenode_exporter.go
-sudo go build resourcemanager_exporter.go
+活
+./start_exporter 
 ```
 
 Help on flags of namenode_exporter:
@@ -45,7 +45,5 @@ Help on flags of resourcemanager_exporter:
 -web.telemetry-path string
     Path under which to expose metrics. (default "/metrics")
 ```
-
-Tested on HDP2.3
 
 go lang 1.14.4 glide
