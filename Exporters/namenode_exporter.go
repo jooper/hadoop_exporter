@@ -1,5 +1,11 @@
 package main
 
+/*
+fun:基于go实现，namenode exporter
+auth:jwp
+date：2021/11/8
+*/
+
 import (
 	"encoding/json"
 	"flag"
@@ -21,6 +27,11 @@ var (
 	namenodeJmxUrl = flag.String("namenode.jmx.url", Utiles.Yml().NameNodeJmx, "Hadoop JMX URL.")
 )
 
+/*
+fun:定义Gauge类型的指标项
+auth:jwp
+date：2021/11/8
+*/
 type Exporter struct {
 	url                      string
 	MissingBlocks            prometheus.Gauge
@@ -44,6 +55,11 @@ type Exporter struct {
 	isActive                 prometheus.Gauge
 }
 
+/*
+fun:构建新exporter
+auth:jwp
+date：2021/11/8
+*/
 func NewExporter(url string) *Exporter {
 	return &Exporter{
 		url: url,
@@ -187,14 +203,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 
 	m := f.(map[string]interface{})
 
-	//faasList := list.List{}
-
 	var nameList = m["beans"].([]interface{})
 	for _, nameData := range nameList {
 		nameDataMap := nameData.(map[string]interface{})
-
-		faasMap := make(map[string]interface{})
-
 		if nameDataMap["name"] == "Hadoop:service=NameNode,name=FSNamesystem" {
 			e.MissingBlocks.Set(nameDataMap["MissingBlocks"].(float64))
 			e.CapacityTotal.Set(nameDataMap["CapacityTotal"].(float64))
@@ -207,33 +218,14 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			e.CorruptBlocks.Set(nameDataMap["CorruptBlocks"].(float64))
 			e.ExcessBlocks.Set(nameDataMap["ExcessBlocks"].(float64))
 			e.StaleDataNodes.Set(nameDataMap["StaleDataNodes"].(float64))
-
-			faasMap["MissingBlocks"] = nameDataMap["MissingBlocks"].(float64)
-			faasMap["NumLiveDataNodes"] = nameDataMap["NumLiveDataNodes"].(float64)
-			faasMap["CapacityTotal"] = nameDataMap["CapacityTotal"].(float64)
-			faasMap["CapacityUsed"] = nameDataMap["CapacityUsed"].(float64)
-			faasMap["CapacityRemaining"] = nameDataMap["CapacityRemaining"].(float64)
-			faasMap["CapacityUsedNonDFS"] = nameDataMap["CapacityUsedNonDFS"].(float64)
-			faasMap["BlocksTotal"] = nameDataMap["BlocksTotal"].(float64)
-			faasMap["FilesTotal"] = nameDataMap["FilesTotal"].(float64)
-			faasMap["CorruptBlocks"] = nameDataMap["CorruptBlocks"].(float64)
-			faasMap["ExcessBlocks"] = nameDataMap["ExcessBlocks"].(float64)
-			faasMap["StaleDataNodes"] = nameDataMap["StaleDataNodes"].(float64)
 		}
 		if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ParNew" {
 			e.pnGcCount.Set(nameDataMap["CollectionCount"].(float64))
 			e.pnGcTime.Set(nameDataMap["CollectionTime"].(float64))
-
-			faasMap["pnGcCount"] = nameDataMap["CollectionCount"].(float64)
-			faasMap["pnGcTime"] = nameDataMap["CollectionTime"].(float64)
 		}
 		if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep" {
 			e.cmsGcCount.Set(nameDataMap["CollectionCount"].(float64))
 			e.cmsGcTime.Set(nameDataMap["CollectionTime"].(float64))
-
-			faasMap["cmsGcCount"] = nameDataMap["CollectionCount"].(float64)
-			faasMap["cmsGcTime"] = nameDataMap["CollectionTime"].(float64)
-
 		}
 
 		if nameDataMap["name"] == "java.lang:type=Memory" {
@@ -242,11 +234,6 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			e.heapMemoryUsageInit.Set(heapMemoryUsage["init"].(float64))
 			e.heapMemoryUsageMax.Set(heapMemoryUsage["max"].(float64))
 			e.heapMemoryUsageUsed.Set(heapMemoryUsage["used"].(float64))
-
-			faasMap["heapMemoryUsageCommitted"] = heapMemoryUsage["committed"].(float64)
-			faasMap["heapMemoryUsageInit"] = heapMemoryUsage["init"].(float64)
-			faasMap["heapMemoryUsageMax"] = heapMemoryUsage["max"].(float64)
-			faasMap["heapMemoryUsageUsed"] = heapMemoryUsage["used"].(float64)
 		}
 
 		if nameDataMap["name"] == "Hadoop:service=NameNode,name=FSNamesystem" {
@@ -257,27 +244,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			}
 		}
 
-		if len(faasMap) > 0 {
-			//faasMap["timestamp"]=time.Now()//.Format("2006-01-02 15:04:05")
-
-			//faasMap["createtime"]=time.Now()
-
-			//pushMetricsToFaas(faasMap)
-
-			Utiles.PushNameNodeMetricsToFaas(faasMap)
-			str, _ := json.Marshal(faasMap)
-			log.Info(string(str))
-
-			//faasList.PushBack(faasMap)
-
-		}
-
+		ConvertMetrics(nameDataMap)
 	}
-
-	//if faasList.Len()>0 {
-	//	log.Info(faasList)
-	//	pushMetricsToFaas(faasList)
-	//}
 
 	e.MissingBlocks.Collect(ch)
 	e.CapacityTotal.Collect(ch)
@@ -299,23 +267,68 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.heapMemoryUsageUsed.Collect(ch)
 	e.isActive.Collect(ch)
 
-	//log.Info(nameList)
-	//pushMetricsToFaas(MapToJson(string(data)))
+}
 
+/*
+fun:获取指标数据，并推送到faas平台
+auth:jwp
+date：2021/11/10
+*/
+func ConvertMetrics(nameDataMap map[string]interface{}) {
+	faasMap := make(map[string]interface{})
+
+	if nameDataMap["name"] == "Hadoop:service=NameNode,name=FSNamesystem" {
+		faasMap["MissingBlocks"] = nameDataMap["MissingBlocks"].(float64)
+		faasMap["NumLiveDataNodes"] = nameDataMap["NumLiveDataNodes"].(float64)
+		faasMap["CapacityTotal"] = nameDataMap["CapacityTotal"].(float64)
+		faasMap["CapacityUsed"] = nameDataMap["CapacityUsed"].(float64)
+		faasMap["CapacityRemaining"] = nameDataMap["CapacityRemaining"].(float64)
+		faasMap["CapacityUsedNonDFS"] = nameDataMap["CapacityUsedNonDFS"].(float64)
+		faasMap["BlocksTotal"] = nameDataMap["BlocksTotal"].(float64)
+		faasMap["FilesTotal"] = nameDataMap["FilesTotal"].(float64)
+		faasMap["CorruptBlocks"] = nameDataMap["CorruptBlocks"].(float64)
+		faasMap["ExcessBlocks"] = nameDataMap["ExcessBlocks"].(float64)
+		faasMap["StaleDataNodes"] = nameDataMap["StaleDataNodes"].(float64)
+	}
+	if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ParNew" {
+		faasMap["pnGcCount"] = nameDataMap["CollectionCount"].(float64)
+		faasMap["pnGcTime"] = nameDataMap["CollectionTime"].(float64)
+	}
+	if nameDataMap["name"] == "java.lang:type=GarbageCollector,name=ConcurrentMarkSweep" {
+		faasMap["cmsGcCount"] = nameDataMap["CollectionCount"].(float64)
+		faasMap["cmsGcTime"] = nameDataMap["CollectionTime"].(float64)
+
+	}
+
+	if nameDataMap["name"] == "java.lang:type=Memory" {
+		heapMemoryUsage := nameDataMap["HeapMemoryUsage"].(map[string]interface{})
+		faasMap["heapMemoryUsageCommitted"] = heapMemoryUsage["committed"].(float64)
+		faasMap["heapMemoryUsageInit"] = heapMemoryUsage["init"].(float64)
+		faasMap["heapMemoryUsageMax"] = heapMemoryUsage["max"].(float64)
+		faasMap["heapMemoryUsageUsed"] = heapMemoryUsage["used"].(float64)
+	}
+
+	if len(faasMap) > 0 {
+		Utiles.PushNameNodeMetricsToFaas(faasMap)
+		str, _ := json.Marshal(faasMap)
+		log.Info(string(str))
+	}
 }
 
 func main() {
-	//开启调度,需在http服务前
+	//开启调度,需在http服务前；调度crontab表达式在配置文件中
 	Utiles.StartScheduler(Utiles.Yml().CronStr)
 
 	flag.Parse()
 
+	//实例化exporter
 	exporter := NewExporter(*namenodeJmxUrl)
 	// 注册监控指标
 	prometheus.MustRegister(exporter)
 
 	log.Printf("Starting Server: %s", *listenAddress)
-	//初始一个http handler
+
+	//初始一个http handler，对外爆率指标页
 	http.Handle(*metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
@@ -328,6 +341,7 @@ func main() {
 
 	})
 
+	//开启端口监听
 	err := http.ListenAndServe(*listenAddress, nil)
 	if err != nil {
 		log.Fatal(err)

@@ -11,7 +11,7 @@ import (
 	"github.com/shirou/gopsutil/mem"
 )
 
-func main1() {
+func main() {
 	//初始化日志服务
 	logger := log.New(os.Stdout, "[Memory]", log.Lshortfile|log.Ldate|log.Ltime)
 

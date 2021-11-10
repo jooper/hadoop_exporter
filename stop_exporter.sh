@@ -8,7 +8,6 @@ ps -ef | grep $process
 PID2=$(ps -ef | grep $process | grep -v grep | awk '{print $2}')
 
 if [ -n "$PID2" ];then
-#  ps -ef | grep $process | grep -v grep | awk '{print $2}'|xargs kill -9
   kill -9 $PID2
   echo 'exporter 已停止,processId:'${PID2}
   exit 1

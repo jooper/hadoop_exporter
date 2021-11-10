@@ -47,3 +47,5 @@ Help on flags of resourcemanager_exporter:
 ```
 
 Tested on HDP2.3
+
+go lang 1.14.4 glide
