@@ -18,12 +18,9 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./target/nm_exporter namenode_
 
 How to run
 ```
-上传config.yml和nm_exporter到服务器
-sudo -s
-chmod +x nm_exporter
-nohup ./nm_exporter &
-活
-./start_exporter 
+上传config.yml、nm_exporter、 start_daemon.sh、 stop_daemon.sh到服务器
+./start_daemon.sh nm_exporter
+./stop_daemon.sh nm_exporter 
 ```
 
 Help on flags of namenode_exporter:
@@ -47,7 +44,7 @@ Help on flags of resourcemanager_exporter:
 ```
 
 ```$xslt
-每个索引初始这么创建，后续会自动填充其他字段
+ES中，每个索引初始可如下创建，后续会自动填充其他字段
 put hadoop_datanode
 {
     "mappings": {
