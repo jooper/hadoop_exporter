@@ -16,10 +16,11 @@ const (
 	namespace = "journalnode"
 )
 
+var yml = Utiles.Yml()
 var (
-	listenAddress     = flag.String("web.listen-address", ":"+Utiles.Yml().JournalNodeExporterPort, "Address on which to expose metrics and web interface.")
+	listenAddress     = flag.String("web.listen-address", ":"+yml.JournalNodeExporterPort, "Address on which to expose metrics and web interface.")
 	metricsPath       = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	journalnodeJmxUrl = flag.String("journalnode.jmx.url", Utiles.Yml().JournalNodeExporterJmx, "Hadoop JMX URL.")
+	journalnodeJmxUrl = flag.String("journalnode.jmx.url", yml.JournalNodeExporterJmx, "Hadoop JMX URL.")
 )
 
 type Exporter struct {
@@ -177,7 +178,6 @@ func ConvertMetrics(journalDataMap map[string]interface{}) {
 
 func main() {
 
-	yml := Utiles.Yml()
 	//开启调度,需在http服务前，调度crontab表达式在配置文件中
 	Utiles.StartSchedulerWithCron(yml.JournalNodeExporterIp, yml.JournalNodeExporterPort, yml.CronStr)
 

@@ -8,6 +8,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/prometheus/log"
+
 	"github.com/prometheus/client_golang/prometheus"
 	//"github.com/prometheus/log"
 	"fmt"
@@ -18,10 +20,12 @@ const (
 	namespace = "datanode"
 )
 
+var yml = Utiles.Yml()
+
 var (
-	listenAddress  = flag.String("web.listen-address", ":9077", "Address on which to expose metrics and web interface.")
+	listenAddress  = flag.String("web.listen-address", ":"+yml.DataNodeExporterPort, "Address on which to expose metrics and web interface.")
 	metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	datanodeJmxUrl = flag.String("datanode.jmx.url", Utiles.Yml().NameNodeJmx, "Hadoop JMX URL.")
+	datanodeJmxUrl = flag.String("datanode.jmx.url", yml.DataNodeJmx, "Hadoop JMX URL.")
 )
 
 type Exporter struct {
@@ -185,7 +189,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	var nameList = m["beans"].([]interface{})
 	for _, nameData := range nameList {
 		nameDataMap := nameData.(map[string]interface{})
-
+		//log.Info(nameDataMap["name"])
 		if nameDataMap["name"] == "Hadoop:service=DataNode,name=DataNodeActivity-"+hostName+"-50010" {
 			e.WritesFromRemoteClient.Set(nameDataMap["WritesFromRemoteClient"].(float64))
 			e.WritesFromLocalClient.Set(nameDataMap["WritesFromLocalClient"].(float64))
@@ -208,6 +212,8 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 			e.GcCount.Set(nameDataMap["GcCount"].(float64))
 			e.ThreadsBlocked.Set(nameDataMap["ThreadsBlocked"].(float64))
 		}
+
+		ConvertMetrics(nameDataMap)
 	}
 	e.WritesFromRemoteClient.Collect(ch)
 	e.WritesFromLocalClient.Collect(ch)
@@ -228,7 +234,58 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	e.BlockReportsAvgTime.Collect(ch)
 }
 
+/*
+fun:获取指标数据，并推送到faas平台
+auth:jwp
+date：2021/11/10
+*/
+func ConvertMetrics(nameDataMap map[string]interface{}) {
+	faasMap := make(map[string]interface{})
+	hostName, _ := os.Hostname()
+	hostName = "hdp03"
+
+	if nameDataMap["name"] == "Hadoop:service=DataNode,name=DataNodeActivity-"+hostName+"-50010" {
+		faasMap["WritesFromRemoteClient"] = nameDataMap["WritesFromRemoteClient"].(float64)
+		faasMap["WritesFromLocalClient"] = nameDataMap["WritesFromLocalClient"].(float64)
+		faasMap["WriteBlockOpNumOps"] = nameDataMap["WriteBlockOpNumOps"].(float64)
+		faasMap["VolumeFailures"] = nameDataMap["VolumeFailures"].(float64)
+		faasMap["TotalWriteTime"] = nameDataMap["TotalWriteTime"].(float64)
+		faasMap["ReadBlockOpAvgTime"] = nameDataMap["ReadBlockOpAvgTime"].(float64)
+		faasMap["HeartbeatsNumOps"] = nameDataMap["HeartbeatsNumOps"].(float64)
+		faasMap["HeartbeatsAvgTime"] = nameDataMap["HeartbeatsAvgTime"].(float64)
+		faasMap["DatanodeNetworkErrors"] = nameDataMap["DatanodeNetworkErrors"].(float64)
+		faasMap["BytesWritten"] = nameDataMap["BytesWritten"].(float64)
+		//e.BlocksWritten.Set(nameDataMap["BlocksWritten"].(float64))
+		faasMap["BlocksReplicated"] = nameDataMap["BlocksReplicated"].(float64)
+		faasMap["BlockReportsNumOps"] = nameDataMap["BlockReportsNumOps"].(float64)
+		faasMap["BlockReportsAvgTime"] = nameDataMap["BlockReportsAvgTime"].(float64)
+
+		//str, _ := json.Marshal(nameDataMap)
+		//log.Info(string(str))
+	}
+	if nameDataMap["name"] == "Hadoop:service=DataNode,name=JvmMetrics" {
+		faasMap["GcTimeMillis"] = nameDataMap["GcTimeMillis"].(float64)
+		faasMap["GcCount"] = nameDataMap["GcCount"].(float64)
+		faasMap["ThreadsBlocked"] = nameDataMap["ThreadsBlocked"].(float64)
+	}
+
+	if nameDataMap["name"] == "Hadoop:service=DataNode,name=FSDatasetState" {
+		faasMap["Capacity"] = nameDataMap["Capacity"].(float64)
+		faasMap["DfsUsed"] = nameDataMap["DfsUsed"].(float64)
+	}
+	if len(faasMap) > 0 {
+		faasMap["datanode_name"] = hostName
+		Utiles.PushDataNodeMetricsToFaas(faasMap)
+		str, _ := json.Marshal(faasMap)
+		log.Info(string(str))
+	}
+}
+
 func main() {
+
+	//开启调度,需在http服务前，调度crontab表达式在配置文件中
+	Utiles.StartSchedulerWithCron(yml.DataNodeExporterIp, yml.DataNodeExporterPort, yml.CronStr)
+
 	flag.Parse()
 	exporter := NewExporter(*datanodeJmxUrl)
 	prometheus.MustRegister(exporter)

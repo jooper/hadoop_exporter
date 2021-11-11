@@ -1,7 +1,6 @@
 package Utiles
 
 import (
-	"github.com/prometheus/log"
 	"github.com/robfig/cron"
 )
 
@@ -13,8 +12,7 @@ func StartScheduler(cronStr string) {
 	}
 	//每5秒执行一次
 	c.AddFunc(cronStr, func() {
-		msg := GetJMxMsg(yml.NameNodeExporterIp, yml.NameNodeExporterPort)
-		log.Info(msg)
+		GetJMxMsg(yml.NameNodeExporterIp, yml.NameNodeExporterPort)
 	})
 	c.Start()
 }

@@ -1,0 +1,35 @@
+namenodeexporterip: localhost
+namenodeexporterport: 9070
+faasapiurl: http://10.231.143.223:18991/hit/xrobot
+cronstr: 0/20 * * * * ?
+namenodejmx: http://10.231.144.251:50070/jmx
+resourcemanagerjmx: http://10.231.144.251:8088
+resourcemanagerexporterip: localhost
+resourcemanagerexporterport: 9088
+journalnodeexporterip: localhost
+journalnodeexporterport: 9071
+journalnodeexporterjmx: http://hdp03:8480/jmx
+datanodeexporterport: 9077
+startsendtime: 2017-01-02 08:08:08
+sendmaxcountperday: 100
+devices:
+  - devid: 123456789
+    nodes:
+      - pkid: 0
+        bkid: 0
+        index: 0
+        minvalue: 0
+        maxvalue: 60
+        datatype: normal
+      - pkid: 0
+        bkid: 0
+        index: 0
+        datatype: boolean
+  - devid: 10001
+    nodes:
+      - pkid: 0
+        bkid: 1
+        index: 0
+        datatype: boolean
+warnfrequency: 10
+sendfrequency: 10

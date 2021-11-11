@@ -20,11 +20,14 @@ type Myconf struct {
 	JournalNodeExporterJmx      string
 	JournalNodeExporterIp       string
 	JournalNodeExporterPort     string
-	StartSendTime               string
-	SendMaxCountPerDay          int
-	Devices                     []Device
-	WarnFrequency               int
-	SendFrequency               int
+	DataNodeExporterPort        string
+	DataNodeExporterIp          string
+	DataNodeJmx                 string
+	//StartSendTime               string
+	//SendMaxCountPerDay          int
+	//Devices                     []Device
+	//WarnFrequency               int
+	//SendFrequency               int
 }
 type Device struct {
 	DevId string

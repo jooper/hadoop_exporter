@@ -46,4 +46,22 @@ Help on flags of resourcemanager_exporter:
     Path under which to expose metrics. (default "/metrics")
 ```
 
+```$xslt
+每个索引初始这么创建，后续会自动填充其他字段
+put hadoop_datanode
+{
+    "mappings": {
+      "namenode": {
+        "properties": {
+        "timestamp": {
+            "type": "date",
+            "format": "yyyy-MM-dd HH:mm:ss.SSSZ",
+            "locale": "zh_CN"
+          }
+        }
+      }
+    }
+  }
+
+```
 go lang 1.14.4 glide

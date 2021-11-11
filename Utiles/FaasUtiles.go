@@ -33,6 +33,11 @@ type Request struct {
 func PushNameNodeMetricsToFaas(v map[string]interface{}) {
 	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_namenode", v)
 }
+
+func PushDataNodeMetricsToFaas(v map[string]interface{}) {
+	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_datanode", v)
+}
+
 func PushResourceManagerMetricsToFaas(v map[string]interface{}) {
 	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_resourcemanager", v)
 }

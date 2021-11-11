@@ -21,10 +21,12 @@ const (
 	namespace = "namenode" //指标前缀 如：namenode_BlocksTot
 )
 
+var yml = Utiles.Yml()
+
 var (
-	listenAddress  = flag.String("web.listen-address", ":"+Utiles.Yml().NameNodeExporterPort, "Address on which to expose metrics and web interface.")
+	listenAddress  = flag.String("web.listen-address", ":"+yml.NameNodeExporterPort, "Address on which to expose metrics and web interface.")
 	metricsPath    = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	namenodeJmxUrl = flag.String("namenode.jmx.url", Utiles.Yml().NameNodeJmx, "Hadoop JMX URL.")
+	namenodeJmxUrl = flag.String("namenode.jmx.url", yml.NameNodeJmx, "Hadoop JMX URL.")
 )
 
 /*
@@ -317,7 +319,7 @@ func ConvertMetrics(nameDataMap map[string]interface{}) {
 
 func main() {
 	//开启调度,需在http服务前；调度crontab表达式在配置文件中
-	Utiles.StartScheduler(Utiles.Yml().CronStr)
+	Utiles.StartScheduler(yml.CronStr)
 
 	flag.Parse()
 
