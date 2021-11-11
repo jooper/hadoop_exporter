@@ -13,7 +13,7 @@ journalnodeexporterip: localhost
 journalnodeexporterport: 9071
 journalnodeexporterjmx: http://hdp03:8480/jmx
 
-datanodejmx: http://hdp03:50075/jmx
+datanodejmx: http://localhost:50075/jmx
 datanodeexporterip: localhost
 datanodeexporterport: 9077
 

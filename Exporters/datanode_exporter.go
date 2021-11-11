@@ -242,7 +242,7 @@ date：2021/11/10
 func ConvertMetrics(nameDataMap map[string]interface{}) {
 	faasMap := make(map[string]interface{})
 	hostName, _ := os.Hostname()
-	hostName = "hdp03"
+	//hostName = "hdp03"
 
 	if nameDataMap["name"] == "Hadoop:service=DataNode,name=DataNodeActivity-"+hostName+"-50010" {
 		faasMap["WritesFromRemoteClient"] = nameDataMap["WritesFromRemoteClient"].(float64)
