@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -92,7 +93,7 @@ func getPrometheusAlterManager() {
 				//fmt.Printf("%+v\n",v.Annotations)
 				if v.Annotations.Description != "" {
 					//调用报警平台
-					sendMsgToFassAlterApi(v.Annotations)
+					sendMsgToFassAlterApi([]string{"15828442734"}, v.Annotations)
 				}
 			}
 
@@ -108,14 +109,33 @@ func getPrometheusAlterManager() {
 /*
 调用报警Fass报警平台
 */
-func sendMsgToFassAlterApi(content Annotations) {
+func sendMsgToFassAlterApi(tels []string, content Annotations) {
 	data, _ := json.Marshal(content)
 
+	telsStr := getManyTel(tels)
+
+	//msg := fmt.Sprintf("{prometheus推送数据:%s}", string(data))
+	msg := fmt.Sprintf("\n Prometheus推送数据:\n %s", content.Summary+"\n"+content.Description)
+
 	if data != nil {
-		Utiles.AlertMsg("15828442734", string(data))
-		fmt.Printf("推送的内容：", string(data))
+		Utiles.AlertMsg(telsStr, msg)
+		fmt.Printf("推送的内容给：", telsStr)
+		fmt.Printf("推送的内容：", msg)
 	}
 
+}
+
+/*
+转换数组为字符串
+*/
+func getManyTel(tels []string) string {
+	var telsStr string
+	for _, v := range tels {
+		telsStr += v + ","
+	}
+	index := strings.LastIndexAny(telsStr, ",")
+	telsStr = telsStr[0:index]
+	return telsStr
 }
 
 func startListener() {
