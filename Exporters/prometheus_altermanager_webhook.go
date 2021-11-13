@@ -115,7 +115,7 @@ func sendMsgToFassAlterApi(tels []string, content Annotations) {
 	telsStr := getManyTel(tels)
 
 	//msg := fmt.Sprintf("{prometheus推送数据:%s}", string(data))
-	msg := fmt.Sprintf("\n Prometheus推送数据:\n %s", content.Summary+"\n"+content.Description)
+	msg := fmt.Sprintf("\n\n信息来自Prometheus  \n 告警内容:\n %s", content.Summary+"\n"+content.Description)
 
 	if data != nil {
 		Utiles.AlertMsg(telsStr, msg)
