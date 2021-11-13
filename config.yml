@@ -17,6 +17,8 @@ datanodejmx: http://localhost:50075/jmx
 datanodeexporterip: localhost
 datanodeexporterport: 9077
 
+alertphone: 15828442734,15983253920
+
 #startsendtime: 2017-01-02 08:08:08
 #sendmaxcountperday: 100
 #devices:

@@ -65,6 +65,8 @@ type Cmd struct {
 	FileName string
 }
 
+var tels = Utiles.Yml().AlertPhone
+
 func getPrometheusAlterManager() {
 	//http://127.0.0.1:8080/webhook?
 
@@ -93,7 +95,7 @@ func getPrometheusAlterManager() {
 				//fmt.Printf("%+v\n",v.Annotations)
 				if v.Annotations.Description != "" {
 					//调用报警平台
-					sendMsgToFassAlterApi([]string{"15828442734"}, v.Annotations)
+					sendMsgToFassAlterApiStr(tels, v.Annotations)
 				}
 			}
 
@@ -110,26 +112,29 @@ func getPrometheusAlterManager() {
 调用报警Fass报警平台
 */
 func sendMsgToFassAlterApi(tels []string, content Annotations) {
-	data, _ := json.Marshal(content)
-
 	telsStr := getManyTel(tels)
-
-	//msg := fmt.Sprintf("{prometheus推送数据:%s}", string(data))
 	msg := fmt.Sprintf("\n\n信息来自Prometheus  \n 告警内容:\n %s", content.Summary+"\n"+content.Description)
-
-	if data != nil {
+	if content.Summary != "" {
+		//Utiles.AlertMsg("15828442734", "test")
 		Utiles.AlertMsg(telsStr, msg)
-		fmt.Printf("推送的内容给：", telsStr)
-		fmt.Printf("推送的内容：", msg)
+		//fmt.Printf("推送的内容给：", telsStr)
+		//fmt.Printf("推送的内容：", msg)
 	}
 
+}
+
+func sendMsgToFassAlterApiStr(tels string, content Annotations) {
+	msg := fmt.Sprintf("\n\n信息来自Prometheus  \n 告警内容:\n %s", content.Summary+"\n"+content.Description)
+	if content.Summary != "" {
+		Utiles.AlertMsg(tels, msg)
+	}
 }
 
 /*
 转换数组为字符串
 */
 func getManyTel(tels []string) string {
-	var telsStr string
+	var telsStr string = ""
 	for _, v := range tels {
 		telsStr += v + ","
 	}
