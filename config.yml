@@ -17,7 +17,22 @@ datanodejmx: http://localhost:50075/jmx
 datanodeexporterip: localhost
 datanodeexporterport: 9077
 
+
+exportproject: MarketCenter_SaleTeam
+exportappid: streamsets_monitor
+exportskill: adbStreamsets-sinkMsgToEs
+
+
 alertphone: 15828442734,15983253920
+alertport: 8081
+alertproject: MarketCenter_CRMTeam
+alertappid: AlterMsgForCrm
+alertskill: AlterMsgReceiveAndSend-AlterMsg
+
+
+
+
+
 
 #startsendtime: 2017-01-02 08:08:08
 #sendmaxcountperday: 100

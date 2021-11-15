@@ -10,7 +10,10 @@ import (
 )
 
 //const apiUrl = "http://10.231.143.223:18991/hit/xrobot"
-var apiUrl = Yml().FaasApiUrl
+
+var yml = Yml()
+
+var apiUrl = yml.FaasApiUrl
 
 const contentType = "application/json"
 
@@ -31,20 +34,24 @@ type Request struct {
 	Content      map[string]interface{} `json:"content"`
 }
 
+var ExporterTenatid = yml.ExportProject
+var ExporterAppid = yml.ExportAppId
+var ExporterSkill = yml.ExportSkill
+
 func PushNameNodeMetricsToFaas(v map[string]interface{}) {
-	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_namenode", v)
+	pushToFaas(ExporterTenatid, ExporterAppid, ExporterSkill, "hadoop_namenode", v)
 }
 
 func PushDataNodeMetricsToFaas(v map[string]interface{}) {
-	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_datanode", v)
+	pushToFaas(ExporterTenatid, ExporterAppid, ExporterSkill, "hadoop_datanode", v)
 }
 
 func PushResourceManagerMetricsToFaas(v map[string]interface{}) {
-	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_resourcemanager", v)
+	pushToFaas(ExporterTenatid, ExporterAppid, ExporterSkill, "hadoop_resourcemanager", v)
 }
 
 func PushJournalNodeMetricsToFaas(v map[string]interface{}) {
-	pushToFaas("MarketCenter_SaleTeam", "streamsets_monitor", "adbStreamsets-sinkMsgToEs", "hadoop_journalnode", v)
+	pushToFaas(ExporterTenatid, ExporterAppid, ExporterSkill, "hadoop_journalnode", v)
 }
 
 func pushToFaas(tenatid string, appid string, skill string, esindex string, v map[string]interface{}) {
@@ -91,7 +98,9 @@ type RequestMsg struct {
 }
 
 func AlertMsg(tels string, content string) {
-	alertMsg("MarketCenter_CRMTeam", "AlterMsgForCrm", "AlterMsgReceiveAndSend-AlterMsg", content, tels, "test", "test")
+
+	//alertMsg("MarketCenter_CRMTeam", "AlterMsgForCrm", "AlterMsgReceiveAndSend-AlterMsg", content, tels, "test", "test")
+	alertMsg(yml.AlertProject, yml.AlertAppId, yml.AlertSkill, content, tels, "test", "test")
 }
 
 func alertMsg(tenatid string, appid string, skill string, content string, tels string, reginon string, key string) {
@@ -111,7 +120,7 @@ func alertMsg(tenatid string, appid string, skill string, content string, tels s
 	paraJson1, _ := json.Marshal(para2)
 
 	fmt.Printf("%+v\n", para2)
-	//apiUrl = "http://10.231.143.223:18991/hit/xrobot"  注意上传config.yml
+	// 注意上传config.yml
 	resp1, _ := http.Post(apiUrl, contentType, bytes.NewReader(paraJson1))
 
 	log.Info("resp1", apiUrl, contentType, resp1)

@@ -24,6 +24,13 @@ type Myconf struct {
 	DataNodeExporterIp          string
 	DataNodeJmx                 string
 	AlertPhone                  string
+	ExportProject               string
+	ExportAppId                 string
+	ExportSkill                 string
+	AlertPort                   string
+	AlertProject                string
+	AlertAppId                  string
+	AlertSkill                  string
 	//StartSendTime               string
 	//SendMaxCountPerDay          int
 	//Devices                     []Device

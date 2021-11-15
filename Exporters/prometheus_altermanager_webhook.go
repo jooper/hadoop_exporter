@@ -1,7 +1,9 @@
 package main
 
 /*
-获取altermanager webhook传递过来的告警json数据
+func： 获取altermanager webhook传递过来的告警json数据
+auth：jwp
+date：2021/11/13
 */
 
 import (
@@ -144,7 +146,7 @@ func getManyTel(tels []string) string {
 }
 
 func startListener() {
-	var listenAddress = flag.String("web.listen-address", ":8081", "Address on which to expose metrics and web interface.")
+	var listenAddress = flag.String("web.listen-address", ":"+serverPort, "Address on which to expose metrics and web interface.")
 	log.Printf("Starting Server: %s", *listenAddress)
 	err := http.ListenAndServe(*listenAddress, nil)
 	if err != nil {
