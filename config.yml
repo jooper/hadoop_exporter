@@ -1,5 +1,5 @@
 faasapiurl: http://10.231.143.223:18991/hit/xrobot
-cronstr: 0/20 * * * * ?
+cronstr: 0/60 * * * * ?
 
 namenodeexporterip: localhost
 namenodeexporterport: 9070
